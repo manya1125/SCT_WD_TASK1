@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Stopwatch</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .pulse-animation {
+            animation: pulse 1.5s infinite;
+        }
+        .lap-item {
+            transition: all 0.3s ease;
+        }
+        .lap-item:hover {
+            transform: translateX(5px);
+            background-color: rgba(59, 130, 246, 0.1);
+        }
+        .btn {
+            transition: all 0.2s ease;
+        }
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        .btn:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-xl p-8 w-full max-w-md">
+        <h1 class="text-3xl font-bold text-center text-indigo-600 mb-6">Interactive Stopwatch</h1>
+        
+        <!-- Display Area -->
+        <div class="bg-indigo-50 rounded-xl p-6 mb-8 text-center">
+            <div id="display" class="text-5xl font-mono font-bold text-indigo-800 mb-4">00:00:00.00</div>
+            
+            <!-- Controls -->
+            <div class="flex justify-center space-x-4 mb-6">
+                <button id="startBtn" class="btn bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded-full shadow">
+                    Start
+                </button>
+                <button id="pauseBtn" class="btn bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2 rounded-full shadow hidden">
+                    Pause
+                </button>
+                <button id="resetBtn" class="btn bg-red-500 hover:bg-red-600 text-white px-6 py-2 rounded-full shadow">
+                    Reset
+                </button>
+                <button id="lapBtn" class="btn bg-indigo-500 hover:bg-indigo-600 text-white px-6 py-2 rounded-full shadow">
+                    Lap
+                </button>
+            </div>
+        </div>
+        
+        <!-- Lap Times Section -->
+        <div class="bg-indigo-50 rounded-xl p-4">
+            <h2 class="text-xl font-semibold text-indigo-700 mb-3">Lap Times</h2>
+            <div id="lapList" class="space-y-2 max-h-60 overflow-y-auto">
+                <div class="text-center text-gray-500 py-2">No lap times recorded yet</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // DOM Elements
+        const display = document.getElementById('display');
+        const startBtn = document.getElementById('startBtn');
+        const pauseBtn = document.getElementById('pauseBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const lapBtn = document.getElementById('lapBtn');
+        const lapList = document.getElementById('lapList');
+        
+        // Variables
+        let startTime = 0;
+        let elapsedTime = 0;
+        let timerInterval;
+        let isRunning = false;
+        let lapTimes = [];
+        
+        // Format time (hh:mm:ss.ms)
+        function formatTime(time) {
+            const date = new Date(time);
+            const hours = date.getUTCHours().toString().padStart(2, '0');
+            const minutes = date.getUTCMinutes().toString().padStart(2, '0');
+            const seconds = date.getUTCSeconds().toString().padStart(2, '0');
+            const milliseconds = Math.floor(date.getUTCMilliseconds() / 10).toString().padStart(2, '0');
+            
+            return `${hours}:${minutes}:${seconds}.${milliseconds}`;
+        }
+        
+        // Update display
+        function updateDisplay() {
+            display.textContent = formatTime(elapsedTime);
+        }
+        
+        // Start timer
+        function startTimer() {
+            if (!isRunning) {
+                startTime = Date.now() - elapsedTime;
+                timerInterval = setInterval(() => {
+                    elapsedTime = Date.now() - startTime;
+                    updateDisplay();
+                }, 10);
+                isRunning = true;
+                
+                // Show pause button, hide start button
+                startBtn.classList.add('hidden');
+                pauseBtn.classList.remove('hidden');
+                
+                // Add pulse animation to display
+                display.classList.add('pulse-animation');
+            }
+        }
+        
+        // Pause timer
+        function pauseTimer() {
+            if (isRunning) {
+                clearInterval(timerInterval);
+                isRunning = false;
+                
+                // Show start button, hide pause button
+                startBtn.classList.remove('hidden');
+                pauseBtn.classList.add('hidden');
+                
+                // Remove pulse animation
+                display.classList.remove('pulse-animation');
+            }
+        }
+        
+        // Reset timer
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isRunning = false;
+            elapsedTime = 0;
+            lapTimes = [];
+            
+            // Reset display
+            updateDisplay();
+            
+            // Show start button, hide pause button
+            startBtn.classList.remove('hidden');
+            pauseBtn.classList.add('hidden');
+            
+            // Remove pulse animation
+            display.classList.remove('pulse-animation');
+            
+            // Clear lap list
+            lapList.innerHTML = '<div class="text-center text-gray-500 py-2">No lap times recorded yet</div>';
+        }
+        
+        // Record lap time
+        function recordLap() {
+            if (isRunning) {
+                const lapTime = elapsedTime;
+                const previousLapTime = lapTimes.length > 0 ? lapTimes[lapTimes.length - 1].time : 0;
+                const lapDifference = lapTime - previousLapTime;
+                
+                lapTimes.push({
+                    time: lapTime,
+                    difference: lapDifference
+                });
+                
+                updateLapList();
+            }
+        }
+        
+        // Update lap list display
+        function updateLapList() {
+            if (lapTimes.length === 0) {
+                lapList.innerHTML = '<div class="text-center text-gray-500 py-2">No lap times recorded yet</div>';
+                return;
+            }
+            
+            lapList.innerHTML = '';
+            
+            lapTimes.forEach((lap, index) => {
+                const lapItem = document.createElement('div');
+                lapItem.className = 'lap-item bg-white p-3 rounded-lg shadow-sm flex justify-between items-center';
+                
+                const lapNumber = document.createElement('span');
+                lapNumber.className = 'font-medium text-indigo-600';
+                lapNumber.textContent = `Lap ${index + 1}`;
+                
+                const lapTimeDisplay = document.createElement('span');
+                lapTimeDisplay.className = 'font-mono text-gray-700';
+                lapTimeDisplay.textContent = formatTime(lap.time);
+                
+                const lapDiff = document.createElement('span');
+                lapDiff.className = 'font-mono text-sm ' + (index === 0 ? 'text-gray-500' : 'text-green-600');
+                lapDiff.textContent = index === 0 ? '' : `+${formatTime(lap.difference)}`;
+                
+                lapItem.appendChild(lapNumber);
+                lapItem.appendChild(lapTimeDisplay);
+                lapItem.appendChild(lapDiff);
+                
+                lapList.appendChild(lapItem);
+            });
+        }
+        
+        // Event Listeners
+        startBtn.addEventListener('click', startTimer);
+        pauseBtn.addEventListener('click', pauseTimer);
+        resetBtn.addEventListener('click', resetTimer);
+        lapBtn.addEventListener('click', recordLap);
+        
+        // Initialize
+        updateDisplay();
+    </script>
+</body>
+</html>
