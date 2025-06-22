@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Tic Tac Toe</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .slide {
+            display: none;
+            animation: fadeIn 0.5s ease-out forwards;
+        }
+        
+        .slide.active {
+            display: block;
+        }
+        
+        .cell {
+            transition: all 0.3s ease;
+        }
+        
+        .cell:hover {
+            transform: scale(1.05);
+        }
+        
+        .winning-cell {
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { background-color: rgba(134, 239, 172, 0.3); }
+            50% { background-color: rgba(134, 239, 172, 0.6); }
+        }
+        
+        .modal {
+            transition: opacity 0.3s ease;
+        }
+        
+        .modal.show {
+            opacity: 1;
+            pointer-events: all;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white min-h-screen flex flex-col items-center justify-center p-4">
+    <div class="max-w-4xl w-full">
+        <!-- Welcome Slide -->
+        <div id="welcome-slide" class="slide active text-center">
+            <h1 class="text-5xl font-bold mb-6 bg-gradient-to-r from-blue-500 to-purple-600 text-transparent bg-clip-text">Tic Tac Toe</h1>
+            <p class="text-xl mb-8">Choose your game mode</p>
+            
+            <div class="flex flex-col md:flex-row gap-6 justify-center items-center mb-12">
+                <div class="card bg-gray-800 rounded-xl p-6 w-full max-w-xs cursor-pointer hover:bg-gray-700 transition duration-300 transform hover:scale-105" onclick="showSlide('game-slide-pvp')">
+                    <div class="text-6xl mb-4">👥</div>
+                    <h2 class="text-2xl font-bold mb-2">Player vs Player</h2>
+                    <p class="text-gray-300">Challenge a friend on the same device</p>
+                </div>
+                
+                <div class="card bg-gray-800 rounded-xl p-6 w-full max-w-xs cursor-pointer hover:bg-gray-700 transition duration-300 transform hover:scale-105" onclick="showSlide('game-slide-pvc')">
+                    <div class="text-6xl mb-4">🤖</div>
+                    <h2 class="text-2xl font-bold mb-2">Player vs Computer</h2>
+                    <p class="text-gray-300">Test your skills against an AI</p>
+                </div>
+            </div>
+            
+            <p class="text-gray-400">Click a mode to start playing</p>
+        </div>
+        
+        <!-- Player vs Player Game -->
+        <div id="game-slide-pvp" class="slide">
+            <div class="flex justify-between items-center mb-6">
+                <button class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition" onclick="showSlide('welcome-slide')">
+                    ← Back
+                </button>
+                <h2 class="text-2xl font-bold text-center flex-grow">Player vs Player</h2>
+            </div>
+            
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                <div class="text-center mb-6">
+                    <div class="text-xl mb-2">Current Turn:</div>
+                    <div id="current-player" class="text-3xl font-bold text-blue-400">Player X</div>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-2 max-w-xs mx-auto mb-6">
+                    <div class="cell w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center text-4xl font-bold cursor-pointer hover:bg-gray-600" onclick="makeMovePVP(0)"></div>
+                    <div class="cell w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center text-4xl font-bold cursor-pointer hover:bg-gray-600" onclick="makeMovePVP(1)"></div>
+                    <div class="cell w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center text-4xl font-bold cursor-pointer hover:bg-gray-600" onclick="makeMovePVP(2)"></div>
+                    <div class="cell w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center text-4xl font-bold cursor-pointer hover:bg-gray-600" onclick="makeMovePVP(3)"></div>
+                    <div class="cell w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center text-4xl font-bold cursor-pointer hover:bg-gray-600" onclick="makeMovePVP(4)"></div>
+                    <div class="cell w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center text-4xl font-bold cursor-pointer hover:bg-gray-600" onclick="makeMovePVP(5)"></div>
+                    <div class="cell w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center text-4xl font-bold cursor-pointer hover:bg-gray-600" onclick="makeMovePVP(6)"></div>
+                    <div class="cell w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center text-4xl font-bold cursor-pointer hover:bg-gray-600" onclick="makeMovePVP(7)"></div>
+                    <div class="cell w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center text-4xl font-bold cursor-pointer hover:bg-gray-600" onclick="makeMovePVP(8)"></div>
+                </div>
+                
+                <div class="flex justify-center gap-4">
+                    <button class="px-4 py-2 bg-green-600 rounded-lg hover:bg-green-500 transition" onclick="resetGame('pvp')">
+                        Reset Game
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Player vs Computer Game -->
+        <div id="game-slide-pvc" class="slide">
+            <div class="flex justify-between items-center mb-6">
+                <button class="px-4 py-2 bg-gray-700 rounded-lg hover:bg-gray-600 transition" onclick="showSlide('welcome-slide')">
+                    ← Back
+                </button>
+                <h2 class="text-2xl font-bold text-center flex-grow">Player vs Computer</h2>
+            </div>
+            
+            <div class="bg-gray-800 p-6 rounded-xl shadow-lg">
+                <div class="text-center mb-6">
+                    <div class="text-xl mb-2">Current Turn:</div>
+                    <div id="current-player-pvc" class="text-3xl font-bold text-blue-400">Player X</div>
+                </div>
+                
+                <div class="grid grid-cols-3 gap-2 max-w-xs mx-auto mb-6">
+                    <div class="cell w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center text-4xl font-bold cursor-pointer hover:bg-gray-600" onclick="makeMovePVC(0)"></div>
+                    <div class="cell w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center text-4xl font-bold cursor-pointer hover:bg-gray-600" onclick="makeMovePVC(1)"></div>
+                    <div class="cell w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center text-4xl font-bold cursor-pointer hover:bg-gray-600" onclick="makeMovePVC(2)"></div>
+                    <div class="cell w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center text-4xl font-bold cursor-pointer hover:bg-gray-600" onclick="makeMovePVC(3)"></div>
+                    <div class="cell w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center text-4xl font-bold cursor-pointer hover:bg-gray-600" onclick="makeMovePVC(4)"></div>
+                    <div class="cell w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center text-4xl font-bold cursor-pointer hover:bg-gray-600" onclick="makeMovePVC(5)"></div>
+                    <div class="cell w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center text-4xl font-bold cursor-pointer hover:bg-gray-600" onclick="makeMovePVC(6)"></div>
+                    <div class="cell w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center text-4xl font-bold cursor-pointer hover:bg-gray-600" onclick="makeMovePVC(7)"></div>
+                    <div class="cell w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center text-4xl font-bold cursor-pointer hover:bg-gray-600" onclick="makeMovePVC(8)"></div>
+                </div>
+                
+                <div class="flex justify-center gap-4">
+                    <button class="px-4 py-2 bg-green-600 rounded-lg hover:bg-green-500 transition" onclick="resetGame('pvc')">
+                        Reset Game
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Result Modal -->
+        <div id="result-modal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center opacity-0 pointer-events-none transition-opacity">
+            <div class="bg-gray-800 rounded-xl p-8 max-w-sm w-full mx-4">
+                <h3 id="result-text" class="text-2xl font-bold text-center mb-6"></h3>
+                <button id="result-close" class="w-full py-2 bg-blue-600 rounded-lg hover:bg-blue-500 transition">
+                    Continue
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Game state variables
+        let board = ['', '', '', '', '', '', '', '', ''];
+        let boardPVC = ['', '', '', '', '', '', '', '', ''];
+        let currentPlayer = 'X';
+        let currentPlayerPVC = 'X';
+        let gameActive = true;
+        let gameActivePVC = true;
+        
+        // Winning combinations
+        const winningConditions = [
+            [0, 1, 2],
+            [3, 4, 5],
+            [6, 7, 8],
+            [0, 3, 6],
+            [1, 4, 7],
+            [2, 5, 8],
+            [0, 4, 8],
+            [2, 4, 6]
+        ];
+        
+        // Slide management
+        function showSlide(slideId) {
+            document.querySelectorAll('.slide').forEach(slide => {
+                slide.classList.remove('active');
+            });
+            document.getElementById(slideId).classList.add('active');
+            
+            if (slideId === 'welcome-slide') {
+                document.title = "Tic Tac Toe";
+            } else {
+                document.title = "Tic Tac Toe - " + 
+                    (slideId === 'game-slide-pvp' ? 'Player vs Player' : 'Player vs Computer');
+            }
+        }
+        
+        // Result modal
+        const resultModal = document.getElementById('result-modal');
+        const resultText = document.getElementById('result-text');
+        const resultClose = document.getElementById('result-close');
+        
+        resultClose.addEventListener('click', () => {
+            resultModal.classList.remove('show');
+        });
+        
+        function showResult(message) {
+            resultText.textContent = message;
+            resultModal.classList.add('show');
+        }
+        
+        // Player vs Player game logic
+        function makeMovePVP(cellIndex) {
+            if (!gameActive || board[cellIndex] !== '') return;
+            
+            board[cellIndex] = currentPlayer;
+            document.querySelectorAll('#game-slide-pvp .cell')[cellIndex].textContent = currentPlayer;
+            document.querySelectorAll('#game-slide-pvp .cell')[cellIndex].classList.add(currentPlayer === 'X' ? 'text-blue-400' : 'text-red-400');
+            
+            if (checkWin(board, currentPlayer, 'pvp')) {
+                showResult(`Player ${currentPlayer} wins!`);
+                gameActive = false;
+                return;
+            }
+            
+            if (!board.includes('')) {
+                showResult("Game ended in a draw!");
+                gameActive = false;
+                return;
+            }
+            
+            currentPlayer = currentPlayer === 'X' ? 'O' : 'X';
+            document.getElementById('current-player').textContent = `Player ${currentPlayer}`;
+            document.getElementById('current-player').className = currentPlayer === 'X' ? 'text-3xl font-bold text-blue-400' : 'text-3xl font-bold text-red-400';
+        }
+        
+        function resetGame(mode) {
+            if (mode === 'pvp') {
+                board = ['', '', '', '', '', '', '', '', ''];
+                currentPlayer = 'X';
+                gameActive = true;
+                
+                document.querySelectorAll('#game-slide-pvp .cell').forEach(cell => {
+                    cell.textContent = '';
+                    cell.className = 'cell w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center text-4xl font-bold cursor-pointer hover:bg-gray-600';
+                });
+                
+                document.getElementById('current-player').textContent = 'Player X';
+                document.getElementById('current-player').className = 'text-3xl font-bold text-blue-400';
+            } else {
+                boardPVC = ['', '', '', '', '', '', '', '', ''];
+                currentPlayerPVC = 'X';
+                gameActivePVC = true;
+                
+                document.querySelectorAll('#game-slide-pvc .cell').forEach(cell => {
+                    cell.textContent = '';
+                    cell.className = 'cell w-20 h-20 bg-gray-700 rounded-lg flex items-center justify-center text-4xl font-bold cursor-pointer hover:bg-gray-600';
+                });
+                
+                document.getElementById('current-player-pvc').textContent = 'Player X';
+                document.getElementById('current-player-pvc').className = 'text-3xl font-bold text-blue-400';
+            }
+        }
+        
+        // Player vs Computer game logic
+        function makeMovePVC(cellIndex) {
+            if (!gameActivePVC || boardPVC[cellIndex] !== '') return;
+            
+            // Player move
+            boardPVC[cellIndex] = currentPlayerPVC;
+            document.querySelectorAll('#game-slide-pvc .cell')[cellIndex].textContent = currentPlayerPVC;
+            document.querySelectorAll('#game-slide-pvc .cell')[cellIndex].classList.add(currentPlayerPVC === 'X' ? 'text-blue-400' : 'text-red-400');
+            
+            if (checkWin(boardPVC, currentPlayerPVC, 'pvc')) {
+                showResult(`Player ${currentPlayerPVC} wins!`);
+                gameActivePVC = false;
+                return;
+            }
+            
+            if (!boardPVC.includes('')) {
+                showResult("Game ended in a draw!");
+                gameActivePVC = false;
+                return;
+            }
+            
+            // Switch to computer's turn
+            currentPlayerPVC = 'O';
+            document.getElementById('current-player-pvc').textContent = "Computer (O)";
+            document.getElementById('current-player-pvc').className = 'text-3xl font-bold text-red-400';
+            
+            // Delay computer move for UX
+            setTimeout(() => {
+                computerMove();
+            }, 500);
+        }
+        
+        function computerMove() {
+            if (!gameActivePVC) return;
+        
+            // Simple AI: first try to win, then block the player, then random move
+            let bestMove = -1;
+            
+            // Try to win
+            for (let i = 0; i < boardPVC.length; i++) {
+                if (boardPVC[i] === '') {
+                    boardPVC[i] = 'O';
+                    if (checkWin(boardPVC, 'O', 'pvc', true)) {
+                        bestMove = i;
+                        boardPVC[i] = '';
+                        break;
+                    }
+                    boardPVC[i] = '';
+                }
+            }
+            
+            // Block player if they're about to win
+            if (bestMove === -1) {
+                for (let i = 0; i < boardPVC.length; i++) {
+                    if (boardPVC[i] === '') {
+                        boardPVC[i] = 'X';
+                        if (checkWin(boardPVC, 'X', 'pvc', true)) {
+                            bestMove = i;
+                            boardPVC[i] = '';
+                            break;
+                        }
+                        boardPVC[i] = '';
+                    }
+                }
+            }
+            
+            // Take center if available
+            if (bestMove === -1 && boardPVC[4] === '') {
+                bestMove = 4;
+            }
+            
+            // Take a random corner
+            if (bestMove === -1) {
+                const corners = [0, 2, 6, 8];
+                const availableCorners = corners.filter(i => boardPVC[i] === '');
+                if (availableCorners.length > 0) {
+                    bestMove = availableCorners[Math.floor(Math.random() * availableCorners.length)];
+                }
+            }
+            
+            // Random move if no better option
+            if (bestMove === -1) {
+                const availableCells = [];
+                for (let i = 0; i < boardPVC.length; i++) {
+                    if (boardPVC[i] === '') {
+                        availableCells.push(i);
+                    }
+                }
+                if (availableCells.length > 0) {
+                    bestMove = availableCells[Math.floor(Math.random() * availableCells.length)];
+                }
+            }
+            
+            // Make the computer's move
+            if (bestMove !== -1) {
+                boardPVC[bestMove] = 'O';
+                document.querySelectorAll('#game-slide-pvc .cell')[bestMove].textContent = 'O';
+                document.querySelectorAll('#game-slide-pvc .cell')[bestMove].
